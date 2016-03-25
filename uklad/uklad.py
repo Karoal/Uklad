@@ -1,10 +1,7 @@
 #!/usr/bin/python2
 import numpy as np
-from numpy import log, isnan, isinf
 import scipy.misc
 import sys
-# for performance analysis
-# import cProfile
 
 ITER_NUM = 250
 EPS = 0.01
@@ -12,16 +9,17 @@ BAILOUT = 2
 
 xmin, xmax = (-0.7, 0.3)
 ymin, ymax = (-0.3j, 1.3j)
-c = 0.345 - 0.45j
+c = -0.123 + 0.745j
 abs_c = abs(c)
-# c = -0.5 + 0.25j
-# c = -0.123 + 0.745j
+
+# Todo: implement these variables as arguments
+# Todo: Move to Julia set class?
 # Exponent in the Julia set
 p = 2
 # Number of 'trailing' elements when calculating Triangle Inequality Average
-m = 10
+m = 3
 
-width = 2500
+width = 30
 yrange = np.abs(ymax - ymin)
 xrange = xmax - xmin
 height = np.int(yrange * width / xrange)
@@ -39,8 +37,7 @@ def julia(z):
 
 # Functions for "Smooth Iteration Count"
 def smooth_iter(z, iters):
-    # return iters + 1 - log(log(abs(z))) / log(m)
-    return iters + 1 + log(log(BAILOUT) / log(abs(z))) / log(p)
+    return iters + 1 + np.log(np.log(BAILOUT) / np.log(abs(z))) / np.log(p)
 
 
 # Functions for Triangle Inequality Average method for colouring fractals
@@ -69,8 +66,7 @@ def lin_inp(zs, d, i, num_elems, const=c):
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
-        m = int(sys.argv[1])
-    path = 'img_edit/julia-header/m' + str(m) + '.png'
+        path = sys.argv[1]
 
     xaxis = np.linspace(xmin, xmax, width)
     yaxis = np.linspace(ymin, ymax, height)
@@ -85,13 +81,8 @@ if __name__ == '__main__':
 
             index = lin_inp(iterated_zs, smooth_count % 1.0,
                             numiters, m, c)
-            if isnan(index) or isinf(index):
+            if np.isnan(index) or np.isinf(index):
                 index = 0
 
             bitmap[col][row] = index
-        if row % 10 == 0:
-            print str(m) + ': ' + str(row)
     scipy.misc.imsave(path, bitmap)
-
-# if __name__ == '__main__':
-    # cProfile.run('main()')
