@@ -42,24 +42,25 @@ class Julia:
         return iters + 1 + np.log(np.log(BAILOUT) /
                                   np.log(abs(z))) / np.log(self.p)
 
-    def t(self, zn_minus1, zn, const):
+    def _t(self, zn_minus1, zn):
         abs_zn_minus1 = abs(zn_minus1 ** self.p)
 
-        mn = abs(abs_zn_minus1 - abs(const))
-        Mn = abs_zn_minus1 + abs(const)
+        mn = abs(abs_zn_minus1 - abs(self.c))
+        Mn = abs_zn_minus1 + abs(self.c)
         return (abs(zn) - mn) / (Mn - mn)
 
-    def avg_sum(self, zs, i, num_elems, const):
-        if i - num_elems == 0:
+    def avg_sum(self, zs, i, num_elems):
+        if i == num_elems:
             return np.inf
-        return (
-            sum(self.t(zs[n-2], zs[n-1], const) for n in range(num_elems, i)) /
-            (i - num_elems))
 
-    def lin_inp(self, zs, d, i):
-        last_iters_num = i if i < self.m else self.m
-        return (d * self.avg_sum(zs, i, last_iters_num, self.c) +
-                (1 - d) * self.avg_sum(zs[:-1], i, last_iters_num, self.c))
+        f = lambda n: self._t(zs[n - 2], zs[n - 1])
+        return sum(f(n) for n in range(num_elems, i)) / (i - num_elems)
+
+    def lin_inp(self, zs, decimal_part, iters_no):
+        last_iters_num = iters_no if iters_no < self.m else self.m
+
+        return (decimal_part * self.avg_sum(zs, iters_no, last_iters_num) +
+                (1 - decimal_part) * self.avg_sum(zs[:-1], iters_no, last_iters_num))
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
